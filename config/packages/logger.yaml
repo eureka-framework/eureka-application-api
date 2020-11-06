@@ -1,0 +1,13 @@
+services:
+
+  # default configuration for services in *this* file
+  _defaults:
+    public:        false
+    autowire:      true
+    autoconfigure: true
+
+  Psr\Log\:
+    resource: '../../vendor/psr/log/Psr/Log/*'
+
+  Psr\Log\LoggerInterface:
+    alias: Psr\Log\NullLogger

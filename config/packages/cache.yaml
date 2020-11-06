@@ -1,0 +1,11 @@
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    public:        false
+    autowire:      true
+    autoconfigure: true
+
+  app.cache.default:
+    alias:  Symfony\Component\Cache\Adapter\ArrayAdapter
+
+  Symfony\Component\Cache\Adapter\ArrayAdapter: ~

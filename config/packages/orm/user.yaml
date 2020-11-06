@@ -1,0 +1,35 @@
+# ORM Config file
+parameters:
+
+    orm.config.user:
+        comment:
+            author:    '%orm.comment.author%'
+            copyright: '%orm.comment.copyright%'
+
+        namespace:
+            entity:     '%orm.base_namespace.entity%\User\Entity'
+            mapper:     '%orm.base_namespace.mapper%\User\Infrastructure\Mapper'
+            repository: '%orm.base_namespace.repository%\User\Repository'
+
+        path:
+            entity:     '%orm.base_path.entity%/User/Entity'
+            mapper:     '%orm.base_path.mapper%/User/Infrastructure/Mapper'
+            repository: '%orm.base_path.repository%/User/Repository'
+
+        cache:
+            enabled:    '%orm.cache.enabled%'
+            prefix:     '%orm.cache.prefix%user'
+
+        database:
+            table:      'user'
+            prefix:     ['user']
+
+        class:
+            classname:  'User'
+
+        joins: []
+
+        validation:
+            enabled: '%orm.validation.enabled%'
+            auto:    '%orm.validation.auto%'
+            extended_validation: ~

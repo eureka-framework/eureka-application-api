@@ -1,0 +1,45 @@
+default:
+    extensions:
+        emuse\BehatHTMLFormatter\BehatHTMLFormatterExtension:
+            name: html
+            renderer: Twig,Behat2
+            file_name: index
+            print_args: true
+            print_outp: true
+            loop_break: true
+
+    formatters:
+        pretty: true
+        html:
+            output_path: '%paths.base%/build/reports/behat'
+
+    suites:
+
+        application:
+            paths:
+                - "%paths.base%/features/features/application/"
+            contexts:
+                - Application\Behat\Context\Common\ClientApplicationContext
+                - Application\Behat\Context\Common\CommonResponseContext
+                - Application\Behat\Context\Common\ServerRequestContext
+                - Application\Behat\Context\Application\HealthContext
+                - Application\Behat\Context\Application\ApplicationContext
+
+        authentication:
+            paths:
+                - "%paths.base%/features/features/authentication/"
+            contexts:
+                - Application\Behat\Context\Common\ClientApplicationContext
+                - Application\Behat\Context\Common\CommonResponseContext
+                - Application\Behat\Context\Common\ServerRequestContext
+                - Application\Behat\Context\Authentication\TokenGetContext
+                - Application\Behat\Context\Authentication\TokenRevokeContext
+
+        authorization:
+            paths:
+                - "%paths.base%/features/features/authorization/"
+            contexts:
+                - Application\Behat\Context\Common\ClientApplicationContext
+                - Application\Behat\Context\Common\CommonResponseContext
+                - Application\Behat\Context\Common\ServerRequestContext
+                - Application\Behat\Context\Authorization\AuthorizationContext

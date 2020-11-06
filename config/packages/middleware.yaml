@@ -1,0 +1,30 @@
+parameters:
+
+    app.middleware:
+        timeLogger:     'Eureka\Kernel\Http\Middleware\ResponseTimeLoggerMiddleware'
+        error:          'Eureka\Kernel\Http\Middleware\ErrorMiddleware'
+        router:         'Eureka\Kernel\Http\Middleware\RouterMiddleware'
+        rateLimiter:    'Eureka\Kernel\Http\Middleware\RateLimiterMiddleware'
+        authentication: 'Application\Middleware\AuthenticationMiddleware'
+        controller:     'Eureka\Kernel\Http\Middleware\ControllerMiddleware'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire:      true
+        autoconfigure: true
+        public:        true
+        bind:
+            $applicationName: '%app.name%'
+            $cache:           '@app.cache.default'
+
+    #~ Global Kernel Services Middleware
+    Eureka\Kernel\Http\Middleware\:
+        resource: '../../vendor/eureka/kernel-http/src/Middleware'
+
+    Eureka\Kernel\Http\Controller\ErrorControllerInterface:
+        alias: 'Application\Controller\Api\Error\ErrorController'
+
+    #~ Global Application Services Middleware
+    Application\Middleware\:
+        resource: '../../src/Middleware'

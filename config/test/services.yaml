@@ -8,9 +8,10 @@ services:
 
     # ===== OVERRIDE VISIBILITY TO GET ACCESS OF THOSE SERVICES DIRECTLY FROM TESTS =====
 
-    # Json Web Token service for Behat helper
+    # Service for Behat helper
     Application\Service\JsonWebTokenService: ~
-
+    Eureka\Component\Validation\ValidatorFactory: ~
+    Eureka\Component\Validation\Entity\ValidatorEntityFactory: ~
 
     #~ Some service alias with public visibility
     Application\Domain\User\Repository\UserRepositoryInterface:

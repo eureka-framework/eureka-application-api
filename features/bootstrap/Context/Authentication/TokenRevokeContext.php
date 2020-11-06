@@ -13,6 +13,7 @@ namespace Application\Behat\Context\Authentication;
 
 use Application\Behat\Fixture\UserTrait;
 use Application\Behat\Helper\JsonWebTokenServiceAwareTrait;
+use Application\Behat\Helper\ServiceMockAwareTrait;
 use Behat\Behat\Context\Context;
 
 /**
@@ -23,5 +24,6 @@ use Behat\Behat\Context\Context;
 class TokenRevokeContext implements Context
 {
     use JsonWebTokenServiceAwareTrait;
+    use ServiceMockAwareTrait;
     use UserTrait;
 }

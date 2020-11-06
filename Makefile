@@ -1,4 +1,4 @@
-.PHONY: install update phpcs phpcbf tests testdox behat
+.PHONY: install update phpcs phpcbf tests testdox behat deploy
 
 PHP_FILES := $(shell find src tests -type f -name '*.php')
 
@@ -39,3 +39,7 @@ testdox: vendor/bin/phpunit $(PHP_FILES)
 
 behat: composer.lock
 	./vendor/bin/behat --strict --tags="~@disabled && ~@external" --colors
+
+deploy: composer.lock
+	composer update
+	./bin/console --color deploy

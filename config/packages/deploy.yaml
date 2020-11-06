@@ -12,30 +12,23 @@ parameters:
 
         install:
             #~ Installation steps
-            step.start: 10
+            step.start: 0
             step.end:   100
 
             step.list:
                 #~ 0: Start Install (defined in main install script)
                 #~ 1 to 9: reserved for deployed itself
-                #~ 001: Copy secrets files
+                #~ 001: Install composer
+                #~ 002: Copy secrets files
 
                 #~ Setup some directories
                 10: 'Install/Init/Directories'
-
-                #~ Copy configs files
-                #20: 'Install/Copy/Config'
-
-                #~ Yarn / npm
-                40: 'Install/Yarn/Install'
-                41: 'Install/Yarn/EncoreBuild'
 
                 #~ Cleaning installation files
                 70: 'Install/Clean/Files'
 
                 #~ Composer cleaning & install no-dev
-                80: 'Install/Composer/Reinstall'
-                89: 'Install/Clean/Cache'
+                80: 'Install/Clean/Cache'
 
                 #~ 90 to 99: reserved for deployed itself
 
@@ -80,4 +73,4 @@ services:
     Eureka\Component\Deployer\Common\PathBuilder:
         arguments:
             $pathSource: '%eureka.deployer.dir.src%'
-            $pathLink: '%eureka.deployer.dir.www%'
+            $pathLink:   '%eureka.deployer.dir.www%'

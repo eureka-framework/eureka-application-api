@@ -34,7 +34,7 @@
     "eureka/component-console": "^5.0",
 
     "eureka/component-database": "^3.0",
-    "eureka/component-deployer": "@dev",
+    "eureka/component-deployer": "^1.1",
     "eureka/component-orm": "^5.0",
     "eureka/component-password": "^4.0",
     "eureka/component-validation": "^5.0",

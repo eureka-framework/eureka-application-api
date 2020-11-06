@@ -2,7 +2,7 @@ Feature: Get new token
   As a "technical" client (mobile, service, script, backoffice)
   I need to be able to request an endpoint to get new authentication token (Json Web Token).
 
-  @fixtureUserId02 @fixtureUserId04 @fixtureUserId05
+  @fixtureUserId02
   Scenario: Client requests a new token with valid credential, and gets a successful response
     Given I set request body field "email" with value "user_enabled@example.com"
       And I set request body field "password" with value "password02"
@@ -24,7 +24,7 @@ Feature: Get new token
      Then I should get an error response
      And The response contains status code "400" and error code "1201" in first error item
 
-  @fixtureNoUser00
+  @fixtureNoUserId00
   Scenario: Client requests a new token with an unknown email, and gets an error response
     Given I set request body field "email" with value "user_unknown@example.com"
       And I set request body field "password" with value "password"
@@ -32,7 +32,7 @@ Feature: Get new token
      Then I should get an error response
       And The response contains status code "401" and error code "1202" in first error item
 
-  @fixtureUser02
+  @fixtureUserId02
   Scenario: Client requests a new token with a wrong password, and gets an error response
     Given I set request body field "email" with value "user_enabled@example.com"
       And I set request body field "password" with value "any_bad_password"
@@ -40,7 +40,7 @@ Feature: Get new token
      Then I should get an error response
       And The response contains status code "401" and error code "1202" in first error item
 
-  @fixtureUser03
+  @fixtureUserId03
   Scenario: Client requests a new token ona disabled account, and gets an error response
     Given I set request body field "email" with value "user_disabled@example.com"
       And I set request body field "password" with value "password03"

@@ -21,5 +21,5 @@ use Behat\Behat\Context\Context;
  */
 class HealthContext implements Context
 {
-    use Helper\ClientMockAwareTrait;
+    use Helper\ServiceMockAwareTrait;
 }

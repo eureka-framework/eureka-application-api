@@ -18,11 +18,11 @@ use PHPUnit\Framework\MockObject\Stub\ConsecutiveCalls;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 
 /**
- * Trait ClientMockAwareTrait
+ * Trait ServiceMockAwareTrait
  *
  * @author Romain Cottard
  */
-trait ClientMockAwareTrait
+trait ServiceMockAwareTrait
 {
     /**
      * @param string $class
@@ -65,7 +65,7 @@ trait ClientMockAwareTrait
      * @param bool $useConsecutiveCall
      * @return void
      */
-    protected function registerClientMockService(
+    protected function registerMockService(
         $class,
         string $method,
         $return,

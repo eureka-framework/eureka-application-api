@@ -16,7 +16,10 @@ use Application\Domain\User\Entity\User;
 use Application\Domain\User\Repository\UserRepositoryInterface;
 use Eureka\Component\Password\Password;
 use Eureka\Component\Orm\Exception\EntityNotExistsException;
-use Eureka\Component\Orm\Exception\OrmException;
+use Eureka\Component\Validation\Entity\ValidatorEntityFactory;
+use Eureka\Component\Validation\ValidatorFactory;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Rule\AnyInvokedCount;
 
 /**
  * Trait UserTrait
@@ -25,8 +28,14 @@ use Eureka\Component\Orm\Exception\OrmException;
  */
 trait UserTrait
 {
-    /** @var UserRepositoryInterface $repository */
+    /** @var UserRepositoryInterface|MockObject $repository */
     private UserRepositoryInterface $repository;
+
+    /** @var ValidatorFactory $validatorFactory */
+    private ValidatorFactory $validatorFactory;
+
+    /** @var ValidatorEntityFactory $validatorEntityFactory */
+    private ValidatorEntityFactory $validatorEntityFactory;
 
     /**
      * @BeforeScenario
@@ -35,96 +44,103 @@ trait UserTrait
      */
     public function initializeUserRepository()
     {
-        $this->repository = ClientApplicationContext::getContainer()->get('Application\Domain\User\Repository\UserRepositoryInterface');
+        $this->registerMockService(
+            UserRepositoryInterface::class,
+            'persist',
+            true
+        );
+
+        $container = ClientApplicationContext::getContainer();
+
+        $this->repository             = $container->get('Application\Domain\User\Repository\UserRepositoryInterface');
+        $this->validatorFactory       = $container->get('Eureka\Component\Validation\ValidatorFactory');
+        $this->validatorEntityFactory = $container->get('Eureka\Component\Validation\Entity\ValidatorEntityFactory');
     }
 
     /**
      * @BeforeScenario @fixtureNoUserId00
-     * @throws OrmException
      */
     public function fixtureNoUserId00(): void
     {
-        //~ Try by id
-        try {
-            $entity = $this->repository->findById(0);
-            $this->repository->delete($entity);
-        } catch(EntityNotExistsException $exception) {
-            //~ What is expected, do nothing more
-        }
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findById')
+            ->with(0)
+            ->willThrowException(new EntityNotExistsException())
+        ;
 
-        //~ Try by email
-        try {
-            $entity = $this->repository->findByEmail('');
-            $this->repository->delete($entity);
-        } catch(EntityNotExistsException $exception) {
-            //~ What is expected, do nothing more
-        }
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findByEmail')
+            ->with('user_unknown@example.com')
+            ->willThrowException(new EntityNotExistsException())
+        ;
     }
 
 
     /**
      * @BeforeScenario @fixtureNoUserTest
-     * @throws OrmException
      */
     public function fixtureNoUserTest(): void
     {
-        //~ Try by email
-        try {
-            $entity = $this->repository->findByEmail('user_test@example.com');
-            $this->repository->delete($entity);
-        } catch(EntityNotExistsException $exception) {
-            //~ What is expected, do nothing more
-        }
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findByEmail')
+            ->with('user_test@example.com')
+            ->willThrowException(new EntityNotExistsException())
+        ;
     }
 
     /**
      * @BeforeScenario @fixtureUserId02
-     * @throws OrmException
      */
     public function fixtureUserId02(): void
     {
-        //~ Try by id
-        try {
-            $entity = $this->repository->findById(2);
-        } catch(EntityNotExistsException $exception) {
-            //~ Try by email
-            try {
-                $entity = $this->repository->findByEmail('user_enabled@example.com');
-            } catch (EntityNotExistsException $exception) {
-                $entity = $this->repository->newEntity();
-            }
-        }
+        $entity = $this->getUser02();
 
-        $this->repository->persist($this->getUser02($entity));
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findById')
+            ->with(2)
+            ->willReturn($entity)
+        ;
+
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findByEmail')
+            ->with('user_enabled@example.com')
+            ->willReturn($entity)
+        ;
     }
 
     /**
      * @BeforeScenario @fixtureUserId03
-     * @throws OrmException
      */
     public function fixtureUserId03(): void
     {
-        //~ Try by id
-        try {
-            $entity = $this->repository->findById(3);
-        } catch(EntityNotExistsException $exception) {
-            //~ Try by email
-            try {
-                $entity = $this->repository->findByEmail('user_disabled@example.com');
-            } catch (EntityNotExistsException $exception) {
-                $entity = $this->repository->newEntity();
-            }
-        }
+        $entity = $this->getUser03();
 
-        $this->repository->persist($this->getUser03($entity));
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findById')
+            ->with(3)
+            ->willReturn($entity)
+        ;
+
+        $this->repository
+            ->expects(new AnyInvokedCount())
+            ->method('findByEmail')
+            ->with('user_disabled@example.com')
+            ->willReturn($entity)
+        ;
     }
 
     /**
-     * @param User $entity
      * @return User
      */
-    private function getUser02(User $entity): User
+    private function getUser02(): User
     {
+        $entity = new User($this->repository, $this->validatorFactory, $this->validatorEntityFactory);
         $entity->setId(2);
         $entity->setEmail('user_enabled@example.com');
         $entity->setPassword((new Password('password02'))->getHash());
@@ -136,11 +152,11 @@ trait UserTrait
     }
 
     /**
-     * @param User $entity
      * @return User
      */
-    private function getUser03(User $entity): User
+    private function getUser03(): User
     {
+        $entity = new User($this->repository, $this->validatorFactory, $this->validatorEntityFactory);
         $entity->setId(3);
         $entity->setEmail('user_disabled@example.com');
         $entity->setPassword((new Password('password03'))->getHash());

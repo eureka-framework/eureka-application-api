@@ -13,8 +13,11 @@ namespace Application\Behat\Helper;
 
 use Application\Behat\Context\Common\ClientApplicationContext;
 use Application\Service\JsonWebTokenService;
+use Lcobucci\Clock\SystemClock;
 use Lcobucci\JWT\Token;
 use PHPUnit\Framework\Assert;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 /**
  * Trait JsonWebTokenServiceAwareTrait
@@ -30,6 +33,8 @@ trait JsonWebTokenServiceAwareTrait
      * @BeforeScenario
      *
      * @return void
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function initializeJsonWebTokenService(): void
     {
@@ -40,23 +45,17 @@ trait JsonWebTokenServiceAwareTrait
      * @param string $tokenState
      * @param int $userId
      * @return Token
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws \Exception
      */
     protected function getTokenWithState(string $tokenState, int $userId): Token
     {
-        switch ($tokenState) {
-            case 'invalid':
-                $token = $this->createInvalidToken($userId);
-                break;
-            case 'expired':
-                $token = $this->createToken($userId, time() - 86400, 3600);
-                break;
-            case 'valid':
-            default:
-                $token = $this->createToken($userId);
-                break;
-        }
-
-        return $token;
+        return match ($tokenState) {
+            'invalid' => $this->createInvalidToken($userId),
+            'expired' => $this->createToken($userId, time() - 86400, 3600),
+            default => $this->createToken($userId),
+        };
     }
 
     /**
@@ -64,8 +63,9 @@ trait JsonWebTokenServiceAwareTrait
      * @param int|null $timestamp
      * @param int|null $delay
      * @return Token
+     * @throws \Exception
      */
-    protected function createToken(int $userId, ?int $timestamp = null, ?int $delay = null): Token
+    protected function createToken(int $userId, ?int $timestamp = null, int $delay = 604800): Token
     {
         return $this->jwtService->generateToken($userId, $timestamp ?? time(), $delay);
     }
@@ -75,10 +75,14 @@ trait JsonWebTokenServiceAwareTrait
      * @param int|null $timestamp
      * @param int|null $delay
      * @return Token
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws \Exception
      */
-    protected function createInvalidToken(int $userId, ?int $timestamp = null, ?int $delay = null): Token
+    protected function createInvalidToken(int $userId, ?int $timestamp = null, int $delay = 604800): Token
     {
-        return (new JsonWebTokenService('invalid_secret_key'))
+        $configuration = ClientApplicationContext::getContainer()->get('app.auth.jwt.configuration.invalid_key');
+        return (new JsonWebTokenService($configuration))
             ->generateToken($userId, $timestamp ?? time(), $delay)
         ;
     }
@@ -96,7 +100,7 @@ trait JsonWebTokenServiceAwareTrait
      * @param string|Token $token
      * @return void
      */
-    protected function assertTokenIsValid($token): void
+    protected function assertTokenIsValid(Token|string $token): void
     {
         if (!$token instanceof Token) {
             $token = $this->getTokenFromString($token);
@@ -109,12 +113,12 @@ trait JsonWebTokenServiceAwareTrait
      * @param string|Token $token
      * @return void
      */
-    protected function assertTokenIsNotExpired($token): void
+    protected function assertTokenIsNotExpired(Token|string $token): void
     {
         if (!$token instanceof Token) {
             $token = $this->getTokenFromString($token);
         }
 
-        Assert::assertFalse($token->isExpired());
+        Assert::assertFalse($token->isExpired(SystemClock::fromUTC()->now()));
     }
 }

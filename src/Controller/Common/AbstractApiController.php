@@ -23,24 +23,13 @@ use Psr\Http\Message\ServerRequestInterface;
 abstract class AbstractApiController extends Controller
 {
     /**
-     * @param ServerRequestInterface|null $request
-     * @return void
-     */
-    public function preAction(?ServerRequestInterface $request = null): void
-    {
-        parent::preAction($request);
-
-        $this->setServerRequest($request);
-    }
-
-    /**
      * @param mixed $data
-     * @param array|null $meta
-     * @param array|null $errors
+     * @param array<mixed>|null $meta
+     * @param array<mixed>|null $errors
      * @return ResponseInterface
      */
     protected function getResponseJsonSuccess(
-        $data,
+        mixed $data,
         ?array $meta = null,
         ?array $errors = null
     ): ResponseInterface {
@@ -52,17 +41,17 @@ abstract class AbstractApiController extends Controller
             $content['meta'] = $meta;
         }
 
-        if ($errors !== null && empty($errors)) {
+        if (!empty($errors)) {
             $content['errors'] = $errors;
         }
 
-        return $this->getResponseJson($content, 200, true);
+        return $this->getResponseJson($content);
     }
 
     /**
      * @param int $httpCode
-     * @param array $errors
-     * @param array|null $meta
+     * @param array<mixed> $errors
+     * @param array<mixed>|null $meta
      * @param mixed $data
      * @return ResponseInterface
      */
@@ -70,9 +59,10 @@ abstract class AbstractApiController extends Controller
         int $httpCode,
         array $errors,
         ?array $meta = null,
-        $data = null
+        mixed $data = null
     ): ResponseInterface {
         $content = [
+            'data'   => null,
             'errors' => $errors
         ];
 
@@ -85,16 +75,16 @@ abstract class AbstractApiController extends Controller
             $content['data'] = $data;
         }
 
-        return $this->getResponseJson($content, $httpCode, true);
+        return $this->getResponseJson($content, $httpCode);
     }
 
     /**
      * @param int $code
      * @param \Exception $exception
-     * @return array
+     * @return array{status: string, title: string, code: string, detail: string, trace?: string}
      * @codeCoverageIgnore
      */
-    protected function getErrorItem(int $code, \Exception $exception)
+    protected function getErrorItem(int $code, \Exception $exception): array
     {
         //~ Ajax response error - JsonApi.org error object format + trace
         $error = [

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Application\Service;
 
+use Application\Domain\User\Entity\User;
 use Application\Domain\User\Repository\UserRepositoryInterface;
 use Eureka\Component\Password\PasswordChecker;
 use Eureka\Kernel\Http\Exception\HttpBadRequestException;
@@ -62,6 +63,7 @@ class LoginService
      * @throws InvalidQueryException
      * @throws OrmException
      * @throws JsonException
+     * @throws \Exception
      */
     public function login(ServerRequestInterface $serverRequest): Token
     {
@@ -70,18 +72,18 @@ class LoginService
         $email    = isset($body['email']) ? trim($body['email']) : '';
         $password = isset($body['password']) ? trim($body['password']) : '';
 
-        if (empty($email) || !is_string($email)) {
+        if (empty($email)) {
             throw new HttpBadRequestException('Error with email (empty or not well formatted value)', 1200);
         }
 
-        if (empty($password) || !is_string($password)) {
+        if (empty($password)) {
             throw new HttpBadRequestException('Error with password (empty or not well formatted value)', 1201);
         }
 
         try {
             //~ Retrieve user
             $user = $this->userRepository->findByEmail($email);
-        } catch (EntityNotExistsException $exception) {
+        } catch (EntityNotExistsException) {
             throw new HttpUnauthorizedException('Invalid email or password', 1202);
         }
 
@@ -113,8 +115,11 @@ class LoginService
     {
         $token = $this->jsonWebTokenService->getTokenFromServerRequest($serverRequest);
 
-        $userId = (int) $token->getClaim('uid');
-        $user = $this->userRepository->findById($userId);
+        /** @var int|string $userId */
+        $userId = $token->claims()->get('uid');
+
+        /** @var User $user */
+        $user = $this->userRepository->findById((int) $userId);
 
         $user->revokeToken($token);
         $this->userRepository->persist($user);

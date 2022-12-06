@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Application\Behat\Context\Authorization;
 
-use Application\Behat\Fixture\UserTrait;
+use Application\Behat\Mock\UserTrait;
 use Application\Behat\Helper\ServiceMockAwareTrait;
 use Behat\Behat\Context\Context;
 

@@ -56,7 +56,7 @@ class ClientApplicationContext implements Context
      *
      * @BeforeSuite
      */
-    public static function prepare()
+    public static function prepare(): void
     {
         //~ Enable bypass final class for clients
         BypassFinals::enable();
@@ -175,8 +175,7 @@ class ClientApplicationContext implements Context
     {
         $root  = realpath(__DIR__ . '/../../../..');
         $env   = 'test';
-        $debug = true;
 
-        return new Kernel($root, $env, $debug);
+        return new Kernel($root, $env, true);
     }
 }

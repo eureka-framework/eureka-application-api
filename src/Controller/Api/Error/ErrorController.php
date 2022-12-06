@@ -28,38 +28,20 @@ class ErrorController extends AbstractApiController implements ErrorControllerIn
      * @param ServerRequestInterface $serverRequest
      * @param \Exception $exception
      * @return ResponseInterface
-     * @throws
      */
     public function error(ServerRequestInterface $serverRequest, \Exception $exception): ResponseInterface
     {
-        switch (true) {
-            case $exception instanceof Exception\HttpBadRequestException:
-                $httpCode = 400;
-                break;
-            case $exception instanceof Exception\HttpUnauthorizedException:
-                $httpCode = 401;
-                break;
-            case $exception instanceof Exception\HttpForbiddenException:
-                $httpCode = 403;
-                break;
-            case $exception instanceof Exception\HttpNotFoundException:
-                $httpCode = 404;
-                break;
-            case $exception instanceof Exception\HttpMethodNotAllowedException:
-                $httpCode = 405;
-                break;
-            case $exception instanceof Exception\HttpConflictException:
-                $httpCode = 409;
-                break;
-            case $exception instanceof Exception\HttpTooManyRequestsException:
-                $httpCode = 429;
-                break;
-            case $exception instanceof Exception\HttpServiceUnavailableException:
-                $httpCode = 503;
-                break;
-            default:
-                $httpCode = 500;
-        }
+        $httpCode = match (true) {
+            $exception instanceof Exception\HttpBadRequestException => 400,
+            $exception instanceof Exception\HttpUnauthorizedException => 401,
+            $exception instanceof Exception\HttpForbiddenException => 403,
+            $exception instanceof Exception\HttpNotFoundException => 404,
+            $exception instanceof Exception\HttpMethodNotAllowedException => 405,
+            $exception instanceof Exception\HttpConflictException => 409,
+            $exception instanceof Exception\HttpTooManyRequestsException => 429,
+            $exception instanceof Exception\HttpServiceUnavailableException => 503,
+            default => 500,
+        };
 
         return $this->getResponseJsonError($httpCode, [$this->getErrorItem($httpCode, $exception)]);
     }

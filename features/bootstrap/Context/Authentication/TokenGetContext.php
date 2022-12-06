@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Application\Behat\Context\Authentication;
 
 use Application\Behat\Context\Common\ClientApplicationContext;
-use Application\Behat\Fixture\UserTrait;
+use Application\Behat\Mock\UserTrait;
 use Application\Behat\Helper\JsonWebTokenServiceAwareTrait;
 use Application\Behat\Helper\ServiceMockAwareTrait;
 use Behat\Behat\Context\Context;
@@ -34,7 +34,7 @@ class TokenGetContext implements Context
      *
      * @return void
      */
-    public function iGetAValidToken()
+    public function iGetAValidToken(): void
     {
         $content = ClientApplicationContext::getResponseContentObject();
 

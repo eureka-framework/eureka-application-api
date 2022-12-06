@@ -1,45 +1,74 @@
 # Services Yaml file - test environment
 services:
-    # default configuration for services in *this* file
-    _defaults:
-        autowire:      true
-        autoconfigure: true
-        public:        true
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: true
 
-    # ===== OVERRIDE VISIBILITY TO GET ACCESS OF THOSE SERVICES DIRECTLY FROM TESTS =====
+  ######################################################################################################################
+  # JWT
+  ######################################################################################################################
+  # Json Web Token with invalid key
+  app.auth.jwt.key.in_memory.plain_text.invalid_key:
+    class: 'Lcobucci\JWT\Signer\Key\InMemory'
+    factory: [ 'Lcobucci\JWT\Signer\Key\InMemory', 'plainText' ]
+    arguments:
+      $contents: 'invalid_secret_key_with_32_chars'
 
-    # Service for Behat helper
-    Application\Service\JsonWebTokenService: ~
-    Eureka\Component\Validation\ValidatorFactory: ~
-    Eureka\Component\Validation\Entity\ValidatorEntityFactory: ~
+  app.auth.jwt.constraint.signed_with.invalid_key:
+    class: 'Lcobucci\JWT\Validation\Constraint\SignedWith'
+    arguments:
+      $signer: '@Lcobucci\JWT\Signer\Hmac\Sha256'
+      $key: '@app.auth.jwt.key.in_memory.plain_text.invalid_key'
 
-    #~ Some service alias with public visibility
-    Application\Domain\User\Repository\UserRepositoryInterface:
-        alias: Application\Domain\User\Infrastructure\Mapper\UserMapper
+  app.auth.jwt.configuration.invalid_key:
+    class: 'Lcobucci\JWT\Configuration'
+    public: true
+    factory: [ 'Lcobucci\JWT\Configuration', 'forSymmetricSigner' ]
+    arguments:
+      $signer: '@Lcobucci\JWT\Signer\Hmac\Sha256'
+      $key: '@app.auth.jwt.key.in_memory.plain_text.invalid_key'
+    calls:
+      - [ 'setValidationConstraints', [ '@app.auth.jwt.constraint.signed_with.invalid_key' ] ]
 
-    app.cache.default:
-        alias: Symfony\Component\Cache\Adapter\ArrayAdapter
-
-
-
-    # ===== OTHER CONFIGS - SPECIFIC TO TESTS =====
-    #~ Null logger to avoid log output
-    Psr\Log\LoggerInterface:
-        alias: 'Psr\Log\NullLogger'
-        public: false
-
-    #~ Cache Array in memory when cache is used
-    Symfony\Component\Cache\Adapter\ArrayAdapter:
-        public: false
-        arguments:
-            $defaultLifetime: 100
+  # Json Web Token service for Behat helper
+  Application\Service\JsonWebTokenService:
+    public: true
+    arguments:
+      $configuration: '@app.auth.jwt.configuration'
 
 
-    #~ Router with specific rate limiter tests values
-    Symfony\Component\Routing\Router:
-        arguments:
-            $loader: '@Symfony\Component\Routing\Loader\YamlFileLoader'
-            $resource: '%kernel.directory.config%/routes/routes_test.yaml'
-            $options:
-                cache_dir: '%kernel.directory.cache%/%kernel.environment%'
-                debug:     true
+  Eureka\Component\Validation\ValidatorFactory: ~
+  Eureka\Component\Validation\Entity\ValidatorEntityFactory: ~
+
+  #~ Some service alias with public visibility
+  Application\Domain\User\Repository\UserRepositoryInterface:
+    alias: Application\Domain\User\Infrastructure\Mapper\UserMapper
+
+  app.cache.default:
+    alias: Symfony\Component\Cache\Adapter\ArrayAdapter
+
+
+
+  # ===== OTHER CONFIGS - SPECIFIC TO TESTS =====
+  #~ Null logger to avoid log output
+  Psr\Log\LoggerInterface:
+    alias: 'Psr\Log\NullLogger'
+    public: false
+
+  #~ Cache Array in memory when cache is used
+  Symfony\Component\Cache\Adapter\ArrayAdapter:
+    public: false
+    arguments:
+      $defaultLifetime: 100
+
+
+  #~ Router with specific rate limiter tests values
+  Symfony\Component\Routing\Router:
+    arguments:
+      $loader: '@Symfony\Component\Routing\Loader\YamlFileLoader'
+      $resource: '%kernel.directory.config%/routes/routes_test.yaml'
+      $options:
+        cache_dir: '%kernel.directory.cache%/%kernel.environment%'
+        debug: true

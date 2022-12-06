@@ -4,16 +4,16 @@ Feature: Revoke a token
   I need to be able to revoke my current token
 
 
-  @fixtureUserId02
+  @mockUserId02
   Scenario: Client requests to revoke the user token, and gets a successful response
     Given I set request header registered token "valid" for user "2"
      When I send the request to the endpoint "/auth/token/revoke" with http method "POST"
      Then I should get a success response
       And The response contains a value string "ok"
 
-  @fixtureUserId02
+  @mockUserId02
   Scenario: Client requests to revoke the user token, and gets a successful response
     Given I set request cookie registered token "valid" for user "2"
-    When I send the request to the endpoint "/auth/token/revoke" with http method "POST"
-    Then I should get a success response
-    And The response contains a value string "ok"
+     When I send the request to the endpoint "/auth/token/revoke" with http method "POST"
+     Then I should get a success response
+      And The response contains a value string "ok"

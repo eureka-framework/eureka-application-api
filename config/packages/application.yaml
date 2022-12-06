@@ -7,7 +7,7 @@ parameters:
   app.secret.database.username: 'username'
   app.secret.database.password: 'password'
 
-  app.token.secret.key:         'secret'
+  app.token.secret.key:         'ThisIsTheDefaultSecretKeyForSignedJWT!'
 
 services:
   # default configuration for services in *this* file
@@ -17,12 +17,6 @@ services:
     public:        false
     bind:
       $connectionName: 'common'
-      $tokenSignatureSecretKey: '%app.token.secret.key%'
-
-  #~ Application source code except controllers & middleware (see packages/middleware.yaml)
-  Application\:
-    resource: '../../src/*'
-    exclude: '../../src/{Controller,Middleware,Domain}'
 
   #~ Application controllers
   Application\Controller\Api\:
@@ -40,21 +34,15 @@ services:
   Application\Domain\:
     resource: '../../src/Domain'
 
+  Application\Service\LoginService: ~
+
   #~ Application controllers
   Eureka\Component\Password\:
     resource: '../../vendor/eureka/component-password/src'
 
   #~ Date provider (time zone UTC & date time now UTC)
-  application.date.time.zone.utc:
-    class: DateTimeZone
-    arguments:
-      $timezone: 'UTC'
+  Lcobucci\Clock\SystemClock:
+    factory: [ 'Lcobucci\Clock\SystemClock', 'fromUTC' ]
 
-  application.date.time.now.utc:
-    class: DateTimeImmutable
-    arguments:
-      $time: 'now'
-      $timezone: '@application.date.time.zone.utc'
-
-  DateTimeImmutable:
-    alias: 'application.date.time.now.utc'
+  Psr\Clock\ClockInterface:
+    alias: Lcobucci\Clock\SystemClock

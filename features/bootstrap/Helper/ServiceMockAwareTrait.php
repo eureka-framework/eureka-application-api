@@ -15,6 +15,8 @@ use Application\Behat\Context\Common\ClientApplicationContext;
 use PHPUnit\Framework\MockObject\Generator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub\ConsecutiveCalls;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 
 /**
@@ -64,11 +66,13 @@ trait ServiceMockAwareTrait
      * @param mixed $return
      * @param bool $useConsecutiveCall
      * @return void
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     protected function registerMockService(
-        $class,
+        array|string $class,
         string $method,
-        $return,
+        mixed $return,
         bool $useConsecutiveCall = false
     ): void {
 
@@ -87,7 +91,7 @@ trait ServiceMockAwareTrait
             $mock = $this->getMock($class);
             $mock = $this->mockMethod($mock, $method, $return, $useConsecutiveCall);
             $container->set($serviceId, $mock);
-        } catch (InvalidArgumentException $exception) {
+        } catch (InvalidArgumentException) {
             $mock = $container->get($serviceId);
             $this->mockMethod($mock, $method, $return, $useConsecutiveCall); // update mock will update the service in container
         }

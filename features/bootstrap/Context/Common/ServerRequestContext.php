@@ -14,9 +14,9 @@ namespace Application\Behat\Context\Common;
 use Application\Behat\Helper\JsonWebTokenServiceAwareTrait;
 use Application\Domain\User\Entity\User;
 use Behat\Behat\Context\Context;
-use Eureka\Component\Orm\Exception\EntityNotExistsException;
-use Eureka\Component\Orm\Exception\OrmException;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Safe\Exceptions\JsonException;
 use function Safe\json_encode;
@@ -48,7 +48,7 @@ class ServerRequestContext implements Context
      * @return void
      * @throws \Exception
      */
-    public function initialize()
+    public function initialize(): void
     {
         $this->resetServerRequest();
 
@@ -74,7 +74,7 @@ class ServerRequestContext implements Context
      * @param string $name
      * @param mixed $value
      */
-    public function iSetRequestHeaderNameWithValue(string $name, $value): void
+    public function iSetRequestHeaderNameWithValue(string $name, mixed $value): void
     {
         self::$requestHeaders[$name] = $value;
     }
@@ -85,7 +85,7 @@ class ServerRequestContext implements Context
      * @param string $name
      * @param mixed $value
      */
-    public function iSetRequestCookieNameWithValue(string $name, $value): void
+    public function iSetRequestCookieNameWithValue(string $name, mixed $value): void
     {
         self::$requestCookie[$name] = $value;
     }
@@ -96,7 +96,7 @@ class ServerRequestContext implements Context
      * @param string $field
      * @param mixed $value
      */
-    public function iSetRequestQueryParameterFieldWithValue(string $field, $value): void
+    public function iSetRequestQueryParameterFieldWithValue(string $field, mixed $value): void
     {
         self::$requestQueryParams[$field] = $value;
     }
@@ -129,7 +129,7 @@ class ServerRequestContext implements Context
      * @param string $field
      * @param mixed $value
      */
-    public function iSetRequestBodyFieldWithValue(string $field, $value): void
+    public function iSetRequestBodyFieldWithValue(string $field, mixed $value): void
     {
         self::$requestBodyFields[$field] = $value;
     }
@@ -166,7 +166,7 @@ class ServerRequestContext implements Context
     {
         $token = $this->getTokenWithState($tokenState, $userId);
 
-        $this->iSetRequestQueryParameterFieldWithValue('token', (string) $token);
+        $this->iSetRequestQueryParameterFieldWithValue('token', $token->toString());
     }
 
     /**
@@ -179,7 +179,7 @@ class ServerRequestContext implements Context
     {
         $token = $this->getTokenWithState($tokenState, $userId);
 
-        $this->iSetRequestHeaderNameWithValue('Authorization', 'JWT ' . (string) $token);
+        $this->iSetRequestHeaderNameWithValue('Authorization', 'JWT ' . $token->toString());
     }
 
     /**
@@ -189,8 +189,8 @@ class ServerRequestContext implements Context
      * @param int $userId
      * @return void
      * @throws JsonException
-     * @throws EntityNotExistsException
-     * @throws OrmException
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function iSetRequestHeaderRegisteredTokenForUser(string $tokenState, int $userId): void
     {
@@ -203,7 +203,7 @@ class ServerRequestContext implements Context
         $user->registerToken($token);
         $userRepository->persist($user);
 
-        $this->iSetRequestHeaderNameWithValue('Authorization', 'JWT ' . (string) $token);
+        $this->iSetRequestHeaderNameWithValue('Authorization', 'JWT ' . $token->toString());
     }
 
     /**
@@ -212,9 +212,9 @@ class ServerRequestContext implements Context
      * @param string $tokenState
      * @param int $userId
      * @return void
+     * @throws ContainerExceptionInterface
      * @throws JsonException
-     * @throws EntityNotExistsException
-     * @throws OrmException
+     * @throws NotFoundExceptionInterface
      */
     public function iSetRequestCookieRegisteredTokenForUser(string $tokenState, int $userId): void
     {
@@ -227,7 +227,7 @@ class ServerRequestContext implements Context
         $user->registerToken($token);
         $userRepository->persist($user);
 
-        $this->iSetRequestCookieNameWithValue('Authorization', 'JWT ' . (string) $token);
+        $this->iSetRequestCookieNameWithValue('Authorization', 'JWT ' . $token->toString());
     }
 
     /**

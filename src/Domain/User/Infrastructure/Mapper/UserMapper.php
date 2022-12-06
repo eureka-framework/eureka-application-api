@@ -28,7 +28,7 @@ class UserMapper extends Abstracts\AbstractUserMapper implements UserRepositoryI
 {
     /**
      * @param string $email
-     * @return User|EntityInterface
+     * @return User&EntityInterface
      * @throws EntityNotExistsException
      * @throws InvalidQueryException
      * @throws OrmException
@@ -38,6 +38,9 @@ class UserMapper extends Abstracts\AbstractUserMapper implements UserRepositoryI
         $queryBuilder = new SelectBuilder($this);
         $queryBuilder->addWhere('user_email', $email);
 
-        return $this->selectOne($queryBuilder);
+        /** @var User $entity */
+        $entity = $this->selectOne($queryBuilder);
+
+        return $entity;
     }
 }

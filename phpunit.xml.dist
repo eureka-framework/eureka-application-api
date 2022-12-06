@@ -8,6 +8,10 @@
         convertErrorsToExceptions="true"
         convertNoticesToExceptions="true"
         convertWarningsToExceptions="true"
+        failOnEmptyTestSuite="true"
+        failOnIncomplete="true"
+        failOnRisky="true"
+        failOnWarning="true"
         forceCoversAnnotation="false"
         processIsolation="false"
         stopOnError="false"
@@ -20,16 +24,16 @@
         timeoutForLargeTests="60"
         verbose="false">
 
-  <coverage>
-    <include>
-      <directory>./src</directory>
-    </include>
-  </coverage>
+    <coverage>
+        <include>
+            <directory>./src</directory>
+        </include>
+    </coverage>
 
-  <testsuites>
-    <testsuite name="Test suite">
-      <directory>./tests</directory>
-    </testsuite>
-  </testsuites>
+    <testsuites>
+        <testsuite name="Test suite">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
 
 </phpunit>

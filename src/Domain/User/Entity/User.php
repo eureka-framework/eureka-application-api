@@ -29,16 +29,16 @@ class User extends Abstracts\AbstractUser implements EntityInterface
     private const MAX_ACTIVE_TOKEN_KEPT = 10;
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getTokenHashListDecoded(): array
     {
-        $tokenHashList = (string) $this->getTokenHashList();
+        $tokenHashList = $this->getTokenHashList();
 
         //~ Try to decode list
         try {
             $tokenHashList = json_decode($tokenHashList);
-        } catch (JsonException $exception) {
+        } catch (JsonException) {
             return [];
         }
 
@@ -65,7 +65,7 @@ class User extends Abstracts\AbstractUser implements EntityInterface
     public function revokeToken(Token $token): void
     {
         $tokenList = $this->getTokenHashListDecoded();
-        $key = array_search(md5((string) $token), $tokenList);
+        $key = array_search(md5($token->toString()), $tokenList);
 
         if ($key !== false) {
             unset($tokenList[$key]);
@@ -79,7 +79,7 @@ class User extends Abstracts\AbstractUser implements EntityInterface
      */
     public function hasRegisteredToken(Token $token): bool
     {
-        $hash = md5((string) $token);
+        $hash = md5($token->toString());
 
         return in_array($hash, $this->getTokenHashListDecoded());
     }
@@ -93,7 +93,7 @@ class User extends Abstracts\AbstractUser implements EntityInterface
     {
         //~ Add token to list
         $accessTokenList   = $this->getTokenHashListDecoded();
-        $accessTokenList[] = md5((string) $token);
+        $accessTokenList[] = md5($token->toString());
 
         //~ Remove the oldest token if necessary
         if (count($accessTokenList) > self::MAX_ACTIVE_TOKEN_KEPT) {
@@ -116,7 +116,7 @@ class User extends Abstracts\AbstractUser implements EntityInterface
         $tokenHashList = $this->getTokenHashListDecoded();
 
         //~ Search and remove token hash from list
-        $hash = md5((string) $token);
+        $hash = md5($token->toString());
         $key  = array_search($hash, $tokenHashList);
 
         if ($key === false) {

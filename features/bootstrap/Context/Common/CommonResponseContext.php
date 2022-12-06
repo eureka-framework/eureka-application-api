@@ -65,7 +65,7 @@ class CommonResponseContext implements Context
         $contentStringMessage = var_export($content, true);
         Assert::assertSame($httpCode, $response->getStatusCode(), $contentStringMessage);
         Assert::assertEquals((string) $httpCode, $error->status, $contentStringMessage);
-        Assert::assertEquals((string) $errorCode, $error->code, $contentStringMessage);
+        Assert::assertEquals($errorCode, $error->code, $contentStringMessage);
     }
 
     /**

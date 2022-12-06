@@ -27,7 +27,7 @@ interface UserRepositoryInterface extends RepositoryInterface
 {
     /**
      * @param string $email
-     * @return User|EntityInterface
+     * @return User&EntityInterface
      * @throws EntityNotExistsException
      * @throws InvalidQueryException
      * @throws OrmException
@@ -36,7 +36,7 @@ interface UserRepositoryInterface extends RepositoryInterface
 
     /**
      * @param int $id
-     * @return User|EntityInterface
+     * @return User&EntityInterface
      * @throws EntityNotExistsException
      */
     public function findById(int $id);
@@ -44,7 +44,7 @@ interface UserRepositoryInterface extends RepositoryInterface
     /**
      * @param \stdClass|null $row
      * @param bool $exists
-     * @return User|EntityInterface
+     * @return User&EntityInterface
      */
     public function newEntity(\stdClass $row = null, bool $exists = false);
 }

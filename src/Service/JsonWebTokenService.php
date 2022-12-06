@@ -12,11 +12,10 @@ declare(strict_types=1);
 namespace Application\Service;
 
 use Eureka\Kernel\Http\Exception\HttpBadRequestException;
-use Lcobucci\JWT\Builder;
-use Lcobucci\JWT\Parser;
-use Lcobucci\JWT\Signer\Hmac\Sha256;
-use Lcobucci\JWT\Signer\Key;
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\UnencryptedToken;
+use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -27,81 +26,47 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class JsonWebTokenService
 {
-    /** @var int EXPIRATION_DELAY 7 days */
-    private const EXPIRATION_DELAY = 604800;
+    public const EXPIRATION_DELAY = 604800; // 7 days
 
-    /** @var Sha256 $signer */
-    private Sha256 $signer;
-
-    /** @var Key $key */
-    private Key $key;
-
-    /** @var string $secretKey */
-    private string $secretKey;
-
-    /**
-     * JsonWebToken constructor.
-     *
-     * @param string $tokenSignatureSecretKey
-     */
-    public function __construct(string $tokenSignatureSecretKey = 'test')
+    public function __construct(public readonly Configuration $configuration)
     {
-        $this->secretKey = $tokenSignatureSecretKey;
-        $this->key       = new Key($this->secretKey);
-        $this->signer    = new Sha256();
     }
 
     /**
      * @param int $userId
      * @param int $currentTimestamp
-     * @param int|null $expirationDelay
-     * @return Token
-     */
-    public function generateToken(int $userId, int $currentTimestamp, int $expirationDelay = null): Token
-    {
-        return (new Builder())
-            ->issuedAt($currentTimestamp)
-            ->withClaim('uid', $userId)
-            ->expiresAt($currentTimestamp + ($expirationDelay ?? self::EXPIRATION_DELAY))
-            ->getToken($this->signer, $this->key)
-        ;
-    }
-
-    /**
-     * @param array $claims
-     * @param int $currentTimestamp
      * @param int $expirationDelay
      * @return Token
+     * @throws \Exception
      */
-    public function generateTokenForClaimAccess(
-        array $claims,
+    public function generateToken(
+        int $userId,
         int $currentTimestamp,
         int $expirationDelay = self::EXPIRATION_DELAY
     ): Token {
-        $builder = (new Builder())
-            ->issuedAt($currentTimestamp)
-            ->expiresAt($currentTimestamp + $expirationDelay) //~ 5 days
+        $dateIssue      = (new \DateTimeImmutable())->setTimestamp($currentTimestamp);
+        $dateExpiration = (new \DateTimeImmutable())->setTimestamp($currentTimestamp + $expirationDelay);
+
+        return $this->configuration->builder()
+            ->issuedAt($dateIssue)
+            ->withClaim('uid', $userId)
+            ->expiresAt($dateExpiration)
+            ->getToken($this->configuration->signer(), $this->configuration->signingKey())
         ;
-
-        foreach ($claims as $key => $value) {
-            $builder = $builder->withClaim($key, $value);
-        }
-
-        return $builder->getToken($this->signer, $this->key);
     }
 
     /**
      * @param ServerRequestInterface $serverRequest
-     * @return Token
+     * @return UnencryptedToken
      */
-    public function getTokenFromServerRequest(ServerRequestInterface $serverRequest): Token
+    public function getTokenFromServerRequest(ServerRequestInterface $serverRequest): UnencryptedToken
     {
         $headerAuth = $serverRequest->getHeaderLine('Authorization');
         $cookieAuth = $serverRequest->getCookieParams()['Authorization'] ?? '';
 
-        if (substr($headerAuth, 0, 4) === 'JWT ') {
+        if (str_starts_with($headerAuth, 'JWT ')) {
             return $this->parseToken(substr($headerAuth, 4));
-        } elseif (substr($cookieAuth, 0, 4) === 'JWT ') {
+        } elseif (str_starts_with($cookieAuth, 'JWT ')) {
             return $this->parseToken(substr($cookieAuth, 4));
         }
 
@@ -110,12 +75,15 @@ class JsonWebTokenService
 
     /**
      * @param string $tokenString
-     * @return Token
+     * @return UnencryptedToken
      * @throws \InvalidArgumentException
      */
-    public function parseToken(string $tokenString): Token
+    public function parseToken(string $tokenString): UnencryptedToken
     {
-        return (new Parser())->parse($tokenString);
+        /** @var UnencryptedToken $token */
+        $token = $this->configuration->parser()->parse($tokenString);
+
+        return $token;
     }
 
     /**
@@ -124,6 +92,16 @@ class JsonWebTokenService
      */
     public function isValidToken(Token $token): bool
     {
-        return $token->verify($this->signer, $this->secretKey);
+        try {
+            $constraints = $this->configuration->validationConstraints();
+
+            $this->configuration->validator()
+                ->assert($token, ...$constraints)
+            ;
+
+            return true;
+        } catch (RequiredConstraintsViolated) {
+            return false;
+        }
     }
 }

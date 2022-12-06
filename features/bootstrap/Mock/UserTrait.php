@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Application\Behat\Fixture;
+namespace Application\Behat\Mock;
 
 use Application\Behat\Context\Common\ClientApplicationContext;
 use Application\Domain\User\Entity\User;
@@ -58,7 +58,7 @@ trait UserTrait
     }
 
     /**
-     * @BeforeScenario @fixtureNoUserId00
+     * @BeforeScenario @mockNoUserId00
      */
     public function fixtureNoUserId00(): void
     {
@@ -79,9 +79,9 @@ trait UserTrait
 
 
     /**
-     * @BeforeScenario @fixtureNoUserTest
+     * @BeforeScenario @mockNoUserTest
      */
-    public function fixtureNoUserTest(): void
+    public function mockNoUserTest(): void
     {
         $this->repository
             ->expects(new AnyInvokedCount())
@@ -92,9 +92,9 @@ trait UserTrait
     }
 
     /**
-     * @BeforeScenario @fixtureUserId02
+     * @BeforeScenario @mockUserId02
      */
-    public function fixtureUserId02(): void
+    public function mockUserId02(): void
     {
         $entity = $this->getUser02();
 
@@ -114,9 +114,9 @@ trait UserTrait
     }
 
     /**
-     * @BeforeScenario @fixtureUserId03
+     * @BeforeScenario @mockUserId03
      */
-    public function fixtureUserId03(): void
+    public function mockUserId03(): void
     {
         $entity = $this->getUser03();
 

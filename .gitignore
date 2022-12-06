@@ -13,3 +13,6 @@ var/
 #~ CI
 /build/
 .phpunit.result.cache
+
+#~ Misc
+.idea/

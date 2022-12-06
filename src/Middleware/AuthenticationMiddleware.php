@@ -14,13 +14,14 @@ namespace Application\Middleware;
 use Application\Domain\User\Entity\User;
 use Application\Domain\User\Repository\UserRepositoryInterface;
 use Application\Service\JsonWebTokenService;
-use Eureka\Component\Orm\EntityInterface;
 use Eureka\Kernel\Http\Exception\HttpBadRequestException;
 use Eureka\Kernel\Http\Exception\HttpForbiddenException;
 use Eureka\Kernel\Http\Exception\HttpUnauthorizedException;
 use Eureka\Component\Orm\Exception\EntityNotExistsException;
 use Eureka\Component\Orm\Exception\OrmException;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\UnencryptedToken;
+use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -35,30 +36,11 @@ use Safe\Exceptions\JsonException;
  */
 class AuthenticationMiddleware implements MiddlewareInterface
 {
-    /** @var JsonWebTokenService $jsonWebTokenService */
-    private JsonWebTokenService $jsonWebTokenService;
-
-    /** @var UserRepositoryInterface $userRepository */
-    private UserRepositoryInterface $userRepository;
-
-    /** @var \DateTimeImmutable $dateNow */
-    private \DateTimeImmutable $dateNow;
-
-    /**
-     * AuthenticationMiddleware constructor.
-     *
-     * @param JsonWebTokenService $jsonWebTokenService
-     * @param UserRepositoryInterface $userRepository
-     * @param \DateTimeImmutable $dateNow
-     */
     public function __construct(
-        JsonWebTokenService $jsonWebTokenService,
-        UserRepositoryInterface $userRepository,
-        \DateTimeImmutable $dateNow
+        private readonly JsonWebTokenService $jsonWebTokenService,
+        private readonly UserRepositoryInterface $userRepository,
+        private readonly ClockInterface $clock
     ) {
-        $this->jsonWebTokenService = $jsonWebTokenService;
-        $this->userRepository      = $userRepository;
-        $this->dateNow             = $dateNow;
     }
 
     /**
@@ -100,10 +82,11 @@ class AuthenticationMiddleware implements MiddlewareInterface
      * @return void
      * @throws OrmException
      * @throws JsonException
+     * @throws \Exception
      */
     private function assertAuthenticationIsValid(Token $token, User $user): void
     {
-        if ($token->isExpired()) {
+        if ($token->isExpired($this->clock->now())) {
             //~ Unregister token when expired, before returning exception
             $user->unregisterToken($token);
             $this->userRepository->persist($user);
@@ -126,17 +109,19 @@ class AuthenticationMiddleware implements MiddlewareInterface
     /**
      * Retrieve user from database based on user id in token.
      *
-     * @param Token $token
-     * @return User|EntityInterface
+     * @param UnencryptedToken $token
+     * @return User
      * @throws HttpUnauthorizedException
      */
-    private function getUser(Token $token): User
+    private function getUser(UnencryptedToken $token): User
     {
-        $userId = (int) $token->getClaim('uid');
+        /** @var int|string $userId */
+        $userId = $token->claims()->get('uid', 0);
 
         try {
-            $user = $this->userRepository->findById($userId);
-        } catch (EntityNotExistsException $exception) {
+            /** @var User $user */
+            $user = $this->userRepository->findById((int) $userId);
+        } catch (EntityNotExistsException) {
             throw new HttpUnauthorizedException('User not found', 1054);
         }
 
@@ -147,9 +132,9 @@ class AuthenticationMiddleware implements MiddlewareInterface
      * Extract token from request headers
      *
      * @param ServerRequestInterface $serverRequest
-     * @return Token
+     * @return UnencryptedToken
      */
-    private function getToken(ServerRequestInterface $serverRequest): Token
+    private function getToken(ServerRequestInterface $serverRequest): UnencryptedToken
     {
         return $this->jsonWebTokenService->getTokenFromServerRequest($serverRequest);
     }
@@ -162,7 +147,7 @@ class AuthenticationMiddleware implements MiddlewareInterface
      */
     private function registerDateAccess(User $user): void
     {
-        $now = $this->dateNow->format('Y-m-d H:i:s');
+        $now = $this->clock->now()->format('Y-m-d H:i:s');
 
         if (empty($user->getDateFirstAccess())) {
             $user->setDateFirstAccess($now);

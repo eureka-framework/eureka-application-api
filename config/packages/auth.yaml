@@ -1,0 +1,32 @@
+services:
+  _defaults:
+    autowire:      true
+    autoconfigure: true
+
+  #~ JWT
+  Lcobucci\JWT\Signer\Hmac\Sha256: ~
+
+  app.auth.jwt.key.in_memory.plain_text:
+    class: 'Lcobucci\JWT\Signer\Key\InMemory'
+    factory: [ 'Lcobucci\JWT\Signer\Key\InMemory', 'plainText' ]
+    arguments:
+      $contents: '%app.token.secret.key%'
+
+  app.auth.jwt.constraint.signed_with:
+    class: 'Lcobucci\JWT\Validation\Constraint\SignedWith'
+    arguments:
+      $signer: '@Lcobucci\JWT\Signer\Hmac\Sha256'
+      $key:    '@app.auth.jwt.key.in_memory.plain_text'
+
+  app.auth.jwt.configuration:
+    class: 'Lcobucci\JWT\Configuration'
+    factory: ['Lcobucci\JWT\Configuration', 'forSymmetricSigner']
+    arguments:
+      $signer: '@Lcobucci\JWT\Signer\Hmac\Sha256'
+      $key:    '@app.auth.jwt.key.in_memory.plain_text'
+    calls:
+      - [ 'setValidationConstraints', [ '@app.auth.jwt.constraint.signed_with' ] ]
+
+  Application\Service\JsonWebTokenService:
+    arguments:
+      $configuration: '@app.auth.jwt.configuration'
